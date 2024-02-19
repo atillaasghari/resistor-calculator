@@ -16,12 +16,18 @@ multiplier = {
     "Gold": 0.1, "Silver": 0.01
 }
 
+# Tolerance colors
+tolerance_colors = ["Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Gray", "Gold", "Silver"]
+
+# Temperature coefficient colors
+temp_coeff_colors = ["Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Gray"]
+
 # Image paths
 image_paths = {
-    3: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/3-band.png",
-    4: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/4-band.png",
-    5: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/5-band.png",
-    6: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/6-band.png"
+    3: "C:/Users/atsl/Desktop/projects/python/resistor-calculator/assets/img/3-band.png",
+    4: "C:/Users/atsl/Desktop/projects/python/resistor-calculator/assets/img/4-band.png",
+    5: "C:/Users/atsl/Desktop/projects/python/resistor-calculator/assets/img/5-band.png",
+    6: "C:/Users/atsl/Desktop/projects/python/resistor-calculator/assets/img/6-band.png"
 }
 
 class ResistorCalculator:
@@ -38,6 +44,7 @@ class ResistorCalculator:
         self.num_bands_var = tk.IntVar(value=3)  # Default value
         self.num_bands_combo = ttk.Combobox(root, textvariable=self.num_bands_var, values=[3, 4, 5, 6], state="readonly")
         self.num_bands_combo.grid(row=0, column=2, padx=5, pady=5)
+        self.num_bands_combo.bind("<<ComboboxSelected>>", self.update_band_colors)
 
         self.color_labels = []
         self.color_vars = []
@@ -51,7 +58,7 @@ class ResistorCalculator:
         self.result_label = ttk.Label(root, text="")
         self.result_label.grid(row=8, column=1, columnspan=2, padx=5, pady=5)
 
-    def update_band_colors(self):
+    def update_band_colors(self, event=None):
         num_bands = self.num_bands_var.get()
 
         # Clear previous band color selectors
@@ -65,12 +72,30 @@ class ResistorCalculator:
 
         # Create new band color selectors
         for i in range(num_bands):
-            label = ttk.Label(self.root, text=f"Band {i+1} Color:")
+            label_text = f"Band {i+1} Color:"
+            if num_bands == 3 and i == 2:
+                label_text = "Multiplier Color:"
+            elif num_bands == 4 and i == 2:
+                label_text = "Multiplier Color:"
+            elif num_bands >= 4 and i == 3:
+                label_text = "Tolerance Color:"
+            elif num_bands == 6 and i == 5:
+                label_text = "Temperature Coefficient Color:"
+            label = ttk.Label(self.root, text=label_text)
             label.grid(row=i+1, column=1, padx=5, pady=5)
             self.color_labels.append(label)
 
             var = tk.StringVar(value="Black")  # Default value
-            combo = ttk.Combobox(self.root, textvariable=var, values=list(color_code.keys()), state="readonly")
+            if num_bands == 3 and i == 2:
+                combo = ttk.Combobox(self.root, textvariable=var, values=list(multiplier.keys()), state="readonly")
+            elif num_bands == 4 and i == 2:
+                combo = ttk.Combobox(self.root, textvariable=var, values=list(multiplier.keys()), state="readonly")
+            elif num_bands >= 4 and i == 3:
+                combo = ttk.Combobox(self.root, textvariable=var, values=tolerance_colors, state="readonly")
+            elif num_bands == 6 and i == 5:
+                combo = ttk.Combobox(self.root, textvariable=var, values=temp_coeff_colors, state="readonly")
+            else:
+                combo = ttk.Combobox(self.root, textvariable=var, values=list(color_code.keys()), state="readonly")
             combo.grid(row=i+1, column=2, padx=5, pady=5)
             self.color_vars.append(var)
             self.color_combos.append(combo)
@@ -93,7 +118,14 @@ class ResistorCalculator:
         num_bands = self.num_bands_var.get()
         bands = [self.color_vars[i].get() for i in range(num_bands)]
         value = sum(color_code[bands[i]] * 10**(num_bands-i-2) for i in range(num_bands-1)) * multiplier[bands[num_bands-1]]
-        self.result_label.config(text=f"Resistance Value: {value} ohms")
+        tolerance = "±" + str(color_code[bands[-1]]) + "%"
+        if num_bands == 3:
+            result_text = f"{value} Ω {tolerance} ({bands[2]})"
+        elif num_bands == 4:
+            result_text = f"{value} Ω {tolerance} ({bands[2]}) ({bands[3]})"
+        elif num_bands == 5 or num_bands == 6:
+            result_text = f"{value} Ω {tolerance} ({bands[3]}) ({bands[4]})"
+        self.result_label.config(text=result_text)      
 
 if __name__ == "__main__":
     root = tk.Tk()
