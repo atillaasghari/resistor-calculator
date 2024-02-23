@@ -1,44 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-
-# Resistor color code mapping
-color_code = {
-    "Black": 0, "Brown": 1, "Red": 2, "Orange": 3, "Yellow": 4,
-    "Green": 5, "Blue": 6, "Violet": 7, "Gray": 8, "White": 9,
-    "Gold": -1, "Silver": -2  # -1 for Gold and -2 for Silver as they are special cases
-}
-
-# Resistance multiplier mapping
-multiplier = {
-    "Black": 1, "Brown": 10, "Red": 100, "Orange": 1000, "Yellow": 10000,
-    "Green": 100000, "Blue": 1000000, "Violet": 10000000, "Gray": 100000000, "White": 1000000000,
-    "Gold": 0.1, "Silver": 0.01
-}
-
-# Tolerance values
-tolerance_values = {
-    "Brown": 1, "Red": 2, "Green": 0.5, "Blue": 0.25, "Violet": 0.1,
-    "Orange": 0.05 ,"Gray": 0.01, "Gold": 5, "Silver": 10, "Yellow": 0.02
-}
-
-# Temperature coefficient colors
-temp_coeff_colors = ["Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Gray"]
-
-# Image paths
-image_paths = {
-    3: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/3-band.png",
-    4: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/4-band.png",
-    5: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/5-band.png",
-    6: "C:/Users/atilla/Desktop/Projects/python/resistor-calculator/assets/img/6-band.png"
-}
+import os
 
 class ResistorCalculator:
     def __init__(self, root):
         self.root = root
         self.root.title("Resistor Calculator")
 
-        self.image_label = tk.Label(root)
+        self.image_label = ttk.Label(root)
         self.image_label.grid(row=1, column=4, rowspan=6, padx=5, pady=5)
 
         self.num_bands_label = ttk.Label(root, text="Number of Bands:")
@@ -106,10 +76,13 @@ class ResistorCalculator:
         num_bands = self.num_bands_var.get()
         image_path = image_paths.get(num_bands)
         if image_path:
-            image = Image.open(image_path)
-            photo = ImageTk.PhotoImage(image)
-            self.image_label.config(image=photo)
-            self.image_label.image = photo
+            try:
+                image = Image.open(image_path)
+                photo = ImageTk.PhotoImage(image)
+                self.image_label.config(image=photo)
+                self.image_label.image = photo
+            except FileNotFoundError:
+                print(f"Image file not found: {image_path}")
         else:
             print(f"Image path not found for {num_bands} bands")
 
@@ -117,7 +90,10 @@ class ResistorCalculator:
         num_bands = self.num_bands_var.get()
         bands = [self.color_vars[i].get() for i in range(num_bands)]
     
-        if num_bands == 4:
+        if num_bands == 3:
+            value = color_code[bands[0]] * 10 + color_code[bands[1]]
+            tolerance = tolerance_values[bands[2]]
+        elif num_bands == 4:
             value = (color_code[bands[0]] * 10 + color_code[bands[1]]) * multiplier[bands[2]]
             tolerance = tolerance_values[bands[3]]
         elif num_bands == 5:
@@ -126,6 +102,7 @@ class ResistorCalculator:
         elif num_bands == 6:
             value = (color_code[bands[0]] * 100 + color_code[bands[1]] * 10 + color_code[bands[2]]) * multiplier[bands[3]]
             tolerance = tolerance_values[bands[4]]
+
         else:
             value = 0
             tolerance = 0
@@ -141,6 +118,37 @@ class ResistorCalculator:
         self.result_label.config(text=value_with_tolerance)
 
 
+# Resistor color code mapping
+color_code = {
+    "Black": 0, "Brown": 1, "Red": 2, "Orange": 3, "Yellow": 4,
+    "Green": 5, "Blue": 6, "Violet": 7, "Gray": 8, "White": 9,
+    "Gold": -1, "Silver": -2  # -1 for Gold and -2 for Silver as they are special cases
+}
+
+# Resistance multiplier mapping
+multiplier = {
+    "Black": 1, "Brown": 10, "Red": 100, "Orange": 1000, "Yellow": 10000,
+    "Green": 100000, "Blue": 1000000, "Violet": 10000000, "Gray": 100000000, "White": 1000000000,
+    "Gold": 0.1, "Silver": 0.01
+}
+
+# Tolerance values
+tolerance_values = {
+    "Brown": 1, "Red": 2, "Green": 0.5, "Blue": 0.25, "Violet": 0.1,
+    "Orange": 0.05 ,"Gray": 0.01, "Gold": 5, "Silver": 10, "Yellow": 0.02
+}
+
+# Temperature coefficient colors
+temp_coeff_colors = ["Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Gray"]
+
+# Image paths
+current_dir = os.path.dirname(os.path.abspath(__file__))
+image_paths = {
+    3: os.path.join(current_dir, "assets\\img\\3-band.png"),
+    4: os.path.join(current_dir, "assets\\img\\4-band.png"),
+    5: os.path.join(current_dir, "assets\\img\\5-band.png"),
+    6: os.path.join(current_dir, "assets\\img\\6-band.png")
+}
 
 
 if __name__ == "__main__":
